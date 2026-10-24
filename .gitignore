@@ -1,0 +1,22 @@
+.venv/
+venv/
+__pycache__/
+.env
+
+logs/
+notes/
+
+# dbt
+dbt/target/
+dbt/logs/
+dbt/dbt_packages/
+.user.yml
+*.hash
+
+# If using a local profile
+dbt/.dbt/.user.yml
+airflow/config/
+airflow/credentials/
+*.json
+notes.txt
+credentials/

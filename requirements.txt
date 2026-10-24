@@ -1,0 +1,6 @@
+apache-airflow-providers-google
+python-dotenv
+dbt-bigquery
+google-cloud-bigquery
+faker
+psycopg2-binary
