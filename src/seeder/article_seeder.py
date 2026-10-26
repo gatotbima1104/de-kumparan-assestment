@@ -2,9 +2,10 @@ import random
 from datetime import datetime
 from uuid import UUID
 
-from src.models.article_model import Article, Status
 from faker import Faker
 from psycopg2.extensions import connection
+
+from src.models.article_model import Article, Status
 from src.setup import CATEGORIES
 
 
@@ -16,11 +17,15 @@ class ArticleSeeder:
         n_authors: int = 10,
         locale: str = "en_US",
         seed=42,
+        start_date: datetime = datetime(2016, 1, 1),
+        end_date: datetime | None = None,
     ):
         self.conn = conn
         self.fake = Faker(locale)
         self.n_authors = n_authors
         self.n_articles = n_articles
+        self.start_date = start_date
+        self.end_date = end_date or datetime.now()
         Faker.seed(seed)
         random.seed(seed)
 
@@ -58,7 +63,8 @@ class ArticleSeeder:
                 name = self.fake.name()
                 email = self.fake.unique.email(domain="example.xyz")
                 created_at = self.fake.date_time_between(
-                    start_date=datetime(2016, 1, 1), end_date=datetime.now()
+                    start_date=self.start_date,
+                    end_date=self.end_date,
                 )
 
                 # generate authors and insert to pg
@@ -78,10 +84,9 @@ class ArticleSeeder:
             return authors_ids
 
     def _article(self, author_id: UUID, category_id: int) -> Article:
-        now = datetime.now()
-
         created_at = self.fake.date_time_between(
-            start_date=datetime(2016, 1, 1), end_date=now
+            start_date=self.start_date,
+            end_date=self.end_date,
         )
 
         # random status
@@ -90,19 +95,21 @@ class ArticleSeeder:
         published_at = None
         if status != Status.DRAFT:
             published_at = self.fake.date_time_between(
-                start_date=created_at, end_date=now
+                start_date=created_at,
+                end_date=self.end_date,
             )
 
         updated_at = self.fake.date_time_between(
             start_date=created_at,
-            end_date=now,
+            end_date=self.end_date,
         )
 
         # simulate soft delete for article with 5% of total article
         deleted_at = None
         if random.random() < 0.05:
             deleted_at = self.fake.date_time_between(
-                start_date=created_at, end_date=now
+                start_date=created_at,
+                end_date=self.end_date,
             )
 
         # return Article(title, content, status, etc.)

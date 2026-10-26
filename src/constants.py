@@ -20,6 +20,7 @@ def required_env(name: str) -> str:
 
 PROJECT_ID = required_env("PROJECT_ID")
 REGION = required_env("REGION")
+BUCKET_NAME = required_env("BUCKET_NAME")
 
 BQ_DATASET_RAW = required_env("BQ_DATASET_RAW")
 BQ_DATASET_STAGING = required_env("BQ_DATASET_STAGING")

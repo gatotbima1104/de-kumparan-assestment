@@ -1,5 +1,6 @@
-import psycopg2
 from abc import ABC, abstractmethod
+
+import psycopg2
 
 
 # abstract classes for variouse database connections
