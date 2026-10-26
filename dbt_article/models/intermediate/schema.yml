@@ -1,0 +1,251 @@
+
+version: 2
+
+models:
+  - name: int_article_enriched
+    description: "Enriched article records with author, category, publication metrics, and deletion status."
+
+    columns:
+      - name: article_id
+        description: "Unique identifier for each article."
+        data_tests:
+          - not_null
+          - unique
+
+      - name: title
+        data_tests:
+          - not_null
+
+      - name: content
+
+      - name: status
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['DRAFT', 'PUBLISHED', 'ARCHIVED']
+
+      - name: author_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_authors')
+                field: id
+
+      - name: author_name
+      - name: author_email
+
+      - name: category_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_categories')
+                field: id
+
+      - name: category_name
+      - name: published_at
+      - name: published_date
+
+      - name: created_at
+        data_tests:
+          - not_null
+
+      - name: created_date
+        data_tests:
+          - not_null
+
+      - name: updated_at
+      - name: updated_date
+      - name: deleted_at
+      - name: deleted_date
+
+      - name: __ingestion_source
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['BATCH']
+
+      - name: is_published
+        data_tests:
+          - not_null
+
+      - name: hours_to_publish
+
+      - name: is_deleted
+        data_tests:
+          - not_null
+
+    data_tests:
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "hours_to_publish >= 0"
+          config:
+            where: "hours_to_publish IS NOT NULL"
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "published_date = DATE(published_at)"
+          config:
+            where: "published_at IS NOT NULL"
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "is_deleted = (deleted_at IS NOT NULL)"
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "is_published = (status = 'PUBLISHED' AND published_at IS NOT NULL)"
+
+  - name: time_spine
+    description: "Daily calendar for dbt Semantic Layer."
+    time_spine:
+      standard_granularity_column: date_day
+    columns:
+      - name: date_day
+        description: "Calendar date at daily granularity."
+        granularity: day
+        data_tests:
+          - not_null
+          - unique
+
+  - name: fct_articles
+    description: >
+      Incremental article fact table containing article attributes,
+      dimension keys, lifecycle dates, and publication metrics.
+
+    semantic_model:
+      enabled: true
+      name: articles
+
+    agg_time_dimension: created_date
+
+    columns:
+      - name: article_id
+        description: Unique article key.
+        entity:
+          type: primary
+          name: article
+        data_tests:
+          - not_null
+          - unique
+
+      - name: title
+        data_tests:
+          - not_null
+
+      - name: author_id
+        description: Author dimension key.
+        entity:
+          type: foreign
+          name: author
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_author')
+                field: id
+
+      - name: category_id
+        description: Category dimension key.
+        entity:
+          type: foreign
+          name: category
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_category')
+                field: id
+
+      - name: created_date
+        description: Date the article was created.
+        dimension:
+          type: time
+        granularity: day
+        data_tests:
+          - not_null
+
+      - name: status
+        dimension:
+          type: categorical
+        data_tests:
+          - not_null
+
+      - name: is_published
+        dimension:
+          type: categorical
+        data_tests:
+          - not_null
+
+      - name: is_deleted
+        dimension:
+          type: categorical
+        data_tests:
+          - not_null
+
+    metrics:
+      - name: total_articles
+        label: Total Articles
+        description: Number of distinct articles.
+        type: simple
+        agg: count_distinct
+        expr: article_id
+
+      - name: published_articles
+        label: Published Articles
+        description: Number of distinct published articles.
+        type: simple
+        agg: count_distinct
+        expr: "CASE WHEN is_published THEN article_id END"
+
+      - name: deleted_articles
+        label: Deleted Articles
+        description: Number of distinct deleted articles.
+        type: simple
+        agg: count_distinct
+        expr: "CASE WHEN is_deleted THEN article_id END"
+
+    data_tests:
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "hours_to_publish >= 0"
+          config:
+            where: "hours_to_publish IS NOT NULL"
+
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "created_date <= CURRENT_DATE()"
+          config:
+            where: "created_date IS NOT NULL"
+
+  - name: dim_author
+    description: Author dimension containing author identity and profile attributes.
+
+    columns:
+      - name: id
+        description: Author business key.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: name
+        data_tests:
+          - not_null
+
+  - name: dim_category
+    description: Category dimension containing article classification attributes.
+
+    columns:
+      - name: id
+        description: Category business key.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: name
+        data_tests:
+          - not_null
+          - unique

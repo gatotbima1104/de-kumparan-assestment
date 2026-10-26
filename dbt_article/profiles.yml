@@ -1,0 +1,13 @@
+dbt_article:
+  target: dev
+  outputs:
+    dev:
+      dataset: article_raw
+      job_execution_timeout_seconds: 300
+      job_retries: 1
+      location: asia-southeast2
+      method: oauth
+      priority: interactive
+      project: jcdeah-009
+      threads: 4
+      type: bigquery

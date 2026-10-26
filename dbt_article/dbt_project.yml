@@ -1,0 +1,27 @@
+name: dbt_article
+version: '1.0.0'
+
+profile: dbt_article
+
+model-paths: ["models", "sources"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  dbt_article:
+    staging:
+      +schema: "{{ env_var('BQ_DATASET_STAGING') }}"
+      +materialized: view
+    intermediate:
+      +schema: "{{ env_var('BQ_DATASET_INTERMEDIATE') }}"
+      +materialized: table
+    marts:
+      +schema: "{{ env_var('BQ_DATASET_MART') }}"
+      +materialized: table

@@ -1,4 +1,9 @@
-from src.seeder.article_seeder import ArticleSeeder
+import argparse
+from datetime import date, datetime, time
+
+from psycopg2.extensions import connection
+
+from src.connections.db_connection import PostgresConnection
 from src.constants import (
     POSTGRES_DB,
     POSTGRES_HOST,
@@ -6,9 +11,7 @@ from src.constants import (
     POSTGRES_PORT,
     POSTGRES_USER,
 )
-from src.connections.db_connection import PostgresConnection
-from psycopg2.extensions import connection
-import argparse
+from src.seeder.article_seeder import ArticleSeeder
 
 
 def parse_args():
@@ -26,15 +29,33 @@ def parse_args():
         default=10,
         help="Number of authors to generate (default: 10)",
     )
+    parser.add_argument(
+        "--start-date",
+        type=date.fromisoformat,
+        default=date(2016, 1, 1),
+        help="Start date in YYYY-MM-DD format (default: 2016-01-01)",
+    )
+    parser.add_argument(
+        "--end-date",
+        type=date.fromisoformat,
+        default=date.today(),
+        help="End date in YYYY-MM-DD format (default: today)",
+    )
 
     return parser.parse_args()
 
 
 def main():
-
     args = parse_args()
+
     if args.articles < 0 or args.authors < 0:
         raise SystemExit("Error: article and author counts cannot be negative.")
+
+    if args.start_date > args.end_date:
+        raise SystemExit("Error: start date cannot be after end date.")
+
+    start_datetime = datetime.combine(args.start_date, time.min)
+    end_datetime = datetime.combine(args.end_date, time.max)
 
     conn: connection = PostgresConnection(
         host=POSTGRES_HOST,
@@ -46,7 +67,11 @@ def main():
 
     try:
         seeder = ArticleSeeder(
-            conn=conn, n_articles=args.articles, n_authors=args.authors
+            conn=conn,
+            n_articles=args.articles,
+            n_authors=args.authors,
+            start_date=start_datetime,
+            end_date=end_datetime,
         )
         seeder.run()
 
@@ -56,8 +81,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-# python -m src.seed \
-#     --articles 1000 \
-#     --authors 50

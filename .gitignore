@@ -5,6 +5,7 @@ __pycache__/
 
 logs/
 notes/
+temp.txt
 
 # dbt
 dbt/target/

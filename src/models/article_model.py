@@ -1,7 +1,8 @@
-from enum import Enum
 from dataclasses import dataclass
 from datetime import datetime
+from enum import Enum
 from uuid import UUID
+
 
 # status article enums
 class Status(str, Enum):
