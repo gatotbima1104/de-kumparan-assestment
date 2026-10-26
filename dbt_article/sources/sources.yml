@@ -1,0 +1,12 @@
+sources:
+  - name: article
+    description: Random Article
+    database: "{{ env_var('PROJECT_ID') }}"
+    dataset: "{{ env_var('BQ_DATASET_RAW') }}"
+    tables:
+      - name: articles
+        description: Raw Article
+      - name: authors
+        description: Raw Author
+      - name: categories
+        description: Raw Categories

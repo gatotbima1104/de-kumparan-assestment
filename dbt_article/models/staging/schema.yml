@@ -1,0 +1,101 @@
+version: 2
+
+models:
+  - name: stg_articles
+    description: "Cleaned and standardized article records from the raw source."
+    columns:
+      - name: id
+        description: "Unique article identifier."
+        tests:
+          - not_null
+          - unique
+
+      - name: title
+        description: "Article title."
+
+      - name: content
+        description: "Article content."
+
+      - name: status
+        description: "Article publication status."
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['DRAFT', 'PUBLISHED', 'ARCHIVED']
+
+      - name: author_id
+        description: "Identifier of the article's author."
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_authors')
+                field: id
+              config:
+                severity: warn
+
+      - name: category_id
+        description: "Identifier of the article's category."
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_categories')
+                field: id
+              config:
+                severity: warn
+
+      - name: published_at
+        description: "Article publication date."
+
+      - name: created_at
+        description: "Article creation date."
+        tests:
+          - not_null
+
+      - name: updated_at
+        description: "Date the article was last updated."
+
+      - name: deleted_at
+        description: "Article deletion date, if applicable."
+
+      - name: __ingestion_source
+        description: "Source ingestion method."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['BATCH']
+
+  - name: stg_authors
+    description: "Cleaned and standardized author records."
+    columns:
+      - name: id
+        description: "Unique author identifier."
+        tests:
+          - not_null
+          - unique
+
+      - name: name
+        description: "Author name."
+        tests:
+          - not_null
+
+      - name: email
+        description: "Author email address."
+
+      - name: created_at
+        description: "Author record creation date."
+
+  - name: stg_categories
+    description: "Cleaned and standardized article category records."
+    columns:
+      - name: id
+        description: "Unique category identifier."
+        tests:
+          - not_null
+          - unique
+
+      - name: name
+        description: "Category name."
+        tests:
+          - not_null
+          - unique
