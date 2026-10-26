@@ -4,3 +4,7 @@ dbt-bigquery
 google-cloud-bigquery
 faker
 psycopg2-binary
+pandas
+pyarrow
+dbt-metricflow[dbt-bigquery]
+grpcio>=1.76.0
